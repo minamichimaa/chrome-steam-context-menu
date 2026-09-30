@@ -1,5 +1,6 @@
 var options = {
       b_steam: true,
+      b_steam_desktop: true,
       b_steamdb: true,
       b_steamdb_instant: false,
       b_isthereanydeal: true,
@@ -22,6 +23,9 @@ function update_menus(results) {
     if (options.b_steam) {
       create_steam_menu();
     }
+    if (options.b_steam_desktop) {
+      create_steam_desktop_menus();
+    }
     if (options.b_steamdb) {
       create_steamdb_menu();
     }
@@ -42,6 +46,49 @@ function create_steam_menu() {
           chrome.tabs.create({url: 'http://store.steampowered.com/search/?term=' + encodeURIComponent(info.selectionText)});
       }
   });
+}
+
+// Steam desktop support added by minamichimaa on 2026-09-30.
+function create_steam_desktop_menus() {
+  var steam_patterns = [
+    '*://store.steampowered.com/*',
+    '*://steamcommunity.com/*',
+    '*://www.steamcommunity.com/*'
+  ];
+  chrome.contextMenus.create({
+    "id": "open_steam_link",
+    "title": "Open in Steam",
+    "contexts": ["link"],
+    "targetUrlPatterns": steam_patterns,
+    "onclick": function (info, tab) {
+      open_in_steam(info.linkUrl, tab);
+    }
+  });
+  chrome.contextMenus.create({
+    "id": "open_steam_page",
+    "title": "Open in Steam",
+    "contexts": ["page"],
+    "documentUrlPatterns": steam_patterns,
+    "onclick": function (info, tab) {
+      open_in_steam(info.pageUrl, tab);
+    }
+  });
+}
+
+function open_in_steam(url, tab) {
+  var steam_url;
+  try {
+    steam_url = new URL(url);
+  } catch (error) {
+    return;
+  }
+  if ((steam_url.protocol !== 'https:' && steam_url.protocol !== 'http:') ||
+      ['store.steampowered.com', 'steamcommunity.com', 'www.steamcommunity.com'].indexOf(steam_url.hostname) === -1 ||
+      steam_url.username || steam_url.password || steam_url.port || !tab) {
+    return;
+  }
+  // Let the browser hand off to Steam without creating an empty browser tab.
+  chrome.tabs.update(tab.id, {url: 'steam://openurl/' + steam_url.href});
 }
 
 function create_steamdb_menu() {

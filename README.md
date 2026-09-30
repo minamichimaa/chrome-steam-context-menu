@@ -20,12 +20,18 @@ The original author's browser store listings distribute the original extension, 
 ### Support and contributions
 Please [report bugs or request features in this fork](https://github.com/minamichimaa/chrome-steam-context-menu/issues). Include your browser and version, the selected game title, and what happened. Pull requests are welcome.
 
+With Node.js installed, run `node --test tests/steam-desktop.test.js` to check the context menus, URL handoff, and desktop preference. For a browser check, reload the extension, try a Steam link on another website and an empty area of a Steam page, and confirm that **Open in Steam** opens the intended page in the desktop app.
+
 ### Use case
 When viewing games from retailers other than Steam, select the game title text, right click and select "Search Steam".  Helpful for when you want to check if you already own a game or want to view the game listing on Steam for reviews, price, screenshots, etc.
 
 ### Features
+* Open Steam store and community links in the Steam desktop app by right-clicking a link and choosing **Open in Steam**.
+* Open the current Steam store or community page in the desktop app by right-clicking an empty area and choosing **Open in Steam**.
 * Search selected text on [Steam](http://store.steampowered.com/), [SteamDB](https://steamdb.info/), or [IsThereAnyDeal](https://isthereanydeal.com/).
 * Change visible menus with the option to collapse the parent menu when only one option is selected.
+
+**Open in Steam** is enabled by default and can be disabled in the extension's options. Steam must be installed; your browser may ask you to allow it to open the app. Store and community URLs keep their path, query, and fragment when passed to Steam.
 
 ### Recommended Extensions
 This extension also goes well with the following extensions:

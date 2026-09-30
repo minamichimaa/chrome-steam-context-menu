@@ -1,6 +1,6 @@
 {
   "name": "Steam Context Menu (minamichimaa)",
-  "description": "Search selected game titles on Steam, SteamDB, and IsThereAnyDeal. Maintained fork by minamichimaa.",
+  "description": "Search games on Steam, SteamDB, and IsThereAnyDeal, or open Steam links in the desktop app. Maintained by minamichimaa.",
   "author": "minamichimaa",
   "homepage_url": "https://github.com/minamichimaa/chrome-steam-context-menu",
   "version": "1.3.0",

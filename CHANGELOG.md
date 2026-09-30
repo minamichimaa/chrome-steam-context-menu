@@ -6,6 +6,7 @@ This file records changes made by minamichimaa to the fork of
 ## Unreleased
 
 ### 2026-09-30
+- Add an optional **Open in Steam** menu for Steam store/community links and page backgrounds, enabled by default.
 - Add minamichimaa's fork identity to the extension name and metadata.
 - Add original-project attribution and fork support links to the options page.
 - Update the README with fork ownership, downloads, compatibility, and contribution information.
