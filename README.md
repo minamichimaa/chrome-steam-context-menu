@@ -1,11 +1,24 @@
-Steam Context Menu
-------------------
+Steam Context Menu — minamichimaa's fork
+--------------------------------------
 
-Search for games on [Steam](http://store.steampowered.com/), [SteamDB](https://steamdb.info/), or [IsThereAnyDeal](https://isthereanydeal.com/) using the context menu in Google Chrome or Firefox.
+Search for games on [Steam](https://store.steampowered.com/), [SteamDB](https://steamdb.info/), or [IsThereAnyDeal](https://isthereanydeal.com/) using selected text in your browser's context menu.
 
-### Download
- * [Chrome Web Store](https://chrome.google.com/webstore/detail/steam-context-menu/mcglhmpnpongdigcmccjallgoinlklnj?hl=en)
- * [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/steam-context-menu/)
+### About this fork
+Maintained by [minamichimaa](https://github.com/minamichimaa). This project is forked from [Skylark95's Steam Context Menu](https://github.com/Skylark95/chrome-steam-context-menu), which is no longer maintained. This fork continues maintenance independently, with fixes for broken search links and updates to the project documentation.
+
+Credit for the original extension goes to Skylark95 and the original contributors. Changes in this fork are recorded in [CHANGELOG.md](CHANGELOG.md).
+
+### Downloads and compatibility
+Get this fork from [GitHub Releases](https://github.com/minamichimaa/chrome-steam-context-menu/releases), when a release is available, or download the repository's source code.
+
+This version still uses Manifest V2. Current Google Chrome does not support Manifest V2 extensions; a Manifest V3 migration is needed for current Chrome support. See [Chrome's support timeline](https://developer.chrome.com/docs/extensions/develop/migrate/mv2-deprecation-timeline).
+
+For temporary testing in Firefox, extract the source, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `manifest.json`. The temporary installation is removed when Firefox restarts.
+
+The original author's browser store listings distribute the original extension, not this fork. No browser store listing is currently linked for this fork.
+
+### Support and contributions
+Please [report bugs or request features in this fork](https://github.com/minamichimaa/chrome-steam-context-menu/issues). Include your browser and version, the selected game title, and what happened. Pull requests are welcome.
 
 ### Use case
 When viewing games from retailers other than Steam, select the game title text, right click and select "Search Steam".  Helpful for when you want to check if you already own a game or want to view the game listing on Steam for reviews, price, screenshots, etc.
@@ -19,9 +32,10 @@ This extension also goes well with the following extensions:
 * [Augmented Steam](https://augmentedsteam.com/)
 * [Steam Database](https://steamdb.info/extension/)
 
-Disclaimer: I am not the author for either of the above extensions.  Steam Context Menu and other extensions linked on this page are not affiliated with Valve, Steam, or any of their partners.
+The recommended extensions are maintained by their respective authors. This fork is independently maintained and is not affiliated with Valve, Steam, SteamDB, IsThereAnyDeal, or the original project's maintainer.
 
 ### Screenshots
+These screenshots are from the original project and may differ from this fork's current appearance.
 #### All options enabled
 ![](screenshots/screenshot_all.jpg)
 
@@ -32,4 +46,4 @@ Disclaimer: I am not the author for either of the above extensions.  Steam Conte
 ![](screenshots/screenshot_options.jpg)
 
 ### License
-[GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt)
+[GNU GPLv3](LICENSE). The original project's license and attribution are retained. Modified versions of the extension remain under GPLv3.
