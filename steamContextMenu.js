@@ -1,5 +1,6 @@
 var options = {
       b_steam: true,
+      b_always_steam_desktop: false,
       b_steam_desktop: true,
       b_steamdb: true,
       b_steamdb_instant: false,
@@ -11,6 +12,9 @@ chrome.storage.sync.get(options, update_menus);
 chrome.storage.onChanged.addListener(options_changed);
 
 function options_changed(changes, areaName) {
+  if (areaName !== 'sync') {
+    return;
+  }
   for(var opt in changes) {
     options[opt] = changes[opt].newValue;
   }
@@ -26,6 +30,14 @@ function update_menus(results) {
     if (options.b_steam_desktop) {
       create_steam_desktop_menus();
     }
+    create_steam_desktop_toggle();
+    if (options.b_steamdb || options.b_isthereanydeal || options.b_options) {
+      chrome.contextMenus.create({
+        "id": "steam_search_separator",
+        "type": "separator",
+        "contexts": ["selection"]
+      });
+    }
     if (options.b_steamdb) {
       create_steamdb_menu();
     }
@@ -39,13 +51,38 @@ function update_menus(results) {
 }
 
 function create_steam_menu() {
+  var desktop = options.b_always_steam_desktop === true;
   chrome.contextMenus.create({
-      "title": "Search Steam for '%s'",
+      "id": "search_steam",
+      "title": "Search Steam for '%s' (" + (desktop ? 'Desktop app' : 'Browser') + ")",
       "contexts": ["selection"],
-      "onclick": function (info) {
-          chrome.tabs.create({url: 'http://store.steampowered.com/search/?term=' + encodeURIComponent(info.selectionText)});
+      "onclick": function (info, tab) {
+          search_steam(info, tab);
       }
   });
+}
+
+function create_steam_desktop_toggle() {
+  chrome.contextMenus.create({
+    "id": "always_open_in_steam",
+    "title": "Always open links in Steam (toggle: " + (options.b_always_steam_desktop === true ? 'on' : 'off') + ")",
+    "type": "checkbox",
+    "checked": options.b_always_steam_desktop === true,
+    "contexts": ["page", "selection", "link"],
+    "onclick": function (info) {
+      options.b_always_steam_desktop = info.checked === true;
+      chrome.storage.sync.set({b_always_steam_desktop: options.b_always_steam_desktop});
+    }
+  });
+}
+
+function search_steam(info, tab) {
+  var url = 'https://store.steampowered.com/search/?term=' + encodeURIComponent(info.selectionText);
+  if (options.b_always_steam_desktop === true) {
+    open_in_steam(url, tab);
+  } else {
+    chrome.tabs.create({url: url});
+  }
 }
 
 // Steam desktop support added by minamichimaa on 2026-09-30.
@@ -76,19 +113,12 @@ function create_steam_desktop_menus() {
 }
 
 function open_in_steam(url, tab) {
-  var steam_url;
-  try {
-    steam_url = new URL(url);
-  } catch (error) {
-    return;
-  }
-  if ((steam_url.protocol !== 'https:' && steam_url.protocol !== 'http:') ||
-      ['store.steampowered.com', 'steamcommunity.com', 'www.steamcommunity.com'].indexOf(steam_url.hostname) === -1 ||
-      steam_url.username || steam_url.password || steam_url.port || !tab) {
+  var steam_url = get_steam_desktop_url(url);
+  if (!steam_url || !tab) {
     return;
   }
   // Let the browser hand off to Steam without creating an empty browser tab.
-  chrome.tabs.update(tab.id, {url: 'steam://openurl/' + steam_url.href});
+  chrome.tabs.update(tab.id, {url: steam_url});
 }
 
 function create_steamdb_menu() {

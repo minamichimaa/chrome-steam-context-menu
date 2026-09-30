@@ -3,11 +3,13 @@
 This file records changes made by minamichimaa to the fork of
 [Skylark95's Steam Context Menu](https://github.com/Skylark95/chrome-steam-context-menu).
 
-## Unreleased
+## 1.4.0
 
 ### 2026-09-30
+- Add a shared **Always open links in Steam** checkbox beside the clickable **Open in Steam** action and in settings, applying to clicked Steam links and Steam searches, off by default.
 - Add an optional **Open in Steam** menu for Steam store/community links and page backgrounds, enabled by default.
-- Add minamichimaa's fork identity to the extension name and metadata.
+- Keep the extension name as **Steam Context Menu**, with minamichimaa credited as author and maintainer.
+- Add a separator between the desktop toggle and the remaining search menus, with a visible on/off toggle label.
 - Add original-project attribution and fork support links to the options page.
 - Update the README with fork ownership, downloads, compatibility, and contribution information.
 
