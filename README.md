@@ -11,9 +11,11 @@ Credit for the original extension goes to Skylark95 and the original contributor
 ### Downloads and compatibility
 Get this fork from [GitHub Releases](https://github.com/minamichimaa/chrome-steam-context-menu/releases), when a release is available, or download the repository's source code.
 
-This version still uses Manifest V2. Current Google Chrome does not support Manifest V2 extensions; a Manifest V3 migration is needed for current Chrome support. See [Chrome's support timeline](https://developer.chrome.com/docs/extensions/develop/migrate/mv2-deprecation-timeline).
+The `manifest-v3` branch migrates the extension to Manifest V3 for Chrome and compatible Chromium browsers (minimum Chrome 88). The published 1.4.1 release still uses Manifest V2; download this branch's source to test the migration.
 
-For temporary testing in Firefox, extract the source, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `manifest.json`. The temporary installation is removed when Firefox restarts.
+For local Chrome testing, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select this repository's folder. Reload the extension and already-open web pages after making changes.
+
+This branch uses Chrome's background service worker. Firefox does not support that background declaration; use the [1.4.1 release](https://github.com/minamichimaa/chrome-steam-context-menu/releases/tag/v1.4.1) for temporary Firefox testing while a separate Firefox background configuration is pending.
 
 The original author's browser store listings distribute the original extension, not this fork. No browser store listing is currently linked for this fork.
 
@@ -21,6 +23,8 @@ The original author's browser store listings distribute the original extension, 
 Please [report bugs or request features in this fork](https://github.com/minamichimaa/chrome-steam-context-menu/issues). Include your browser and version, the selected game title, and what happened. Pull requests are welcome.
 
 With Node.js installed, run `node --test tests/steam-desktop.test.js` to check the context menus, URL handoff, and desktop preference. For a browser check, reload the extension, try a Steam link on another website and an empty area of a Steam page, and click **Open in Steam** to confirm that the intended page opens in the desktop app.
+
+Also test Steam, SteamDB, and IsThereAnyDeal searches, the desktop toggle, and the options page. Close the service worker inspector, leave the extension idle until the worker stops, and repeat a search to verify that it wakes with the saved settings. Automated tests cover worker restarts and menu rebuilding; browser loading and desktop launching still need a live check.
 
 ### Use case
 When viewing games from retailers other than Steam, select the game title text, right click and select "Search Steam".  Helpful for when you want to check if you already own a game or want to view the game listing on Steam for reviews, price, screenshots, etc.

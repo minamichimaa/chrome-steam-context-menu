@@ -4,12 +4,17 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 
-function loadExtension(savedOptions) {
+function loadExtension(savedOptions, install = true, deferRemovals = false) {
   const menus = [];
   const updates = [];
   const createdTabs = [];
   const stored = {...savedOptions};
   let onChanged;
+  let onClicked;
+  let onInstalled;
+  let onStartup;
+  let optionsOpened = 0;
+  const removals = [];
   const chrome = {
     storage: {
       sync: {
@@ -28,20 +33,93 @@ function loadExtension(savedOptions) {
       onChanged: {addListener(callback) { onChanged = callback; }}
     },
     contextMenus: {
-      create(menu) { menus.push(menu); },
-      removeAll(callback) { menus.length = 0; callback(); }
+      onClicked: {addListener(listener) { onClicked = listener; }},
+      create(menu) {
+        assert.equal(menu.onclick, undefined, 'service worker menus must use the global click listener');
+        assert.ok(menu.id, 'every worker menu needs a stable ID');
+        assert.equal(menus.some(item => item.id === menu.id), false, 'menu IDs must be unique');
+        menus.push({...menu, onclick(info, tab) { onClicked({...info, menuItemId: menu.id}, tab); }});
+      },
+      removeAll(callback) {
+        const finish = () => {menus.length = 0; callback();};
+        if (deferRemovals) removals.push(finish);
+        else finish();
+      }
+    },
+    runtime: {
+      onInstalled: {addListener(listener) {onInstalled = listener;}},
+      onStartup: {addListener(listener) {onStartup = listener;}},
+      openOptionsPage() {optionsOpened++;}
     },
     tabs: {
       update(id, properties) { updates.push({id, ...properties}); },
       create(properties) { createdTabs.push(properties); }
     }
   };
-  const context = vm.createContext({chrome, URL});
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'steamUrl.js'), 'utf8'), context);
+  const context = vm.createContext({chrome, URL, importScripts(file) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+  }});
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'steamContextMenu.js'), 'utf8'), context);
+  if (install) onInstalled();
   return {menus, updates, createdTabs, stored,
-    changed: (changes, area = 'sync') => onChanged(changes, area)};
+    click: (info, tab) => onClicked(info, tab),
+    startup: () => onStartup(),
+    flushRemoval: () => removals.shift()(),
+    get optionsOpened() {return optionsOpened;},
+    changed: (changes, area = 'sync') => {
+      if (area === 'sync') {
+        for (const [key, change] of Object.entries(changes)) {
+          if (change.newValue === undefined) delete stored[key];
+          else stored[key] = change.newValue;
+        }
+      }
+      onChanged(changes, area);
+    }};
 }
+
+test('a waking worker handles clicks using saved settings without recreating menus', () => {
+  const worker = loadExtension({b_always_steam_desktop: true, b_steamdb_instant: true}, false);
+  assert.equal(worker.menus.length, 0);
+  worker.click({menuItemId: 'search_steam', selectionText: 'PEAK'}, {id: 7});
+  assert.equal(worker.updates[0].url, 'steam://openurl/https://store.steampowered.com/search/?term=PEAK');
+  worker.click({menuItemId: 'search_steamdb', selectionText: 'A&B'}, {id: 7});
+  assert.equal(worker.createdTabs[0].url, 'https://steamdb.info/instantsearch/?idx=steamdb&q=A%26B');
+  worker.click({menuItemId: 'open_options'}, {id: 7});
+  assert.equal(worker.optionsOpened, 1);
+  assert.equal(worker.menus.length, 0);
+  worker.startup();
+  assert.ok(worker.menus.length > 0);
+});
+
+test('removed settings restore defaults and disabled actions are ignored', () => {
+  const worker = loadExtension({b_always_steam_desktop: true, b_steamdb: false});
+  worker.changed({b_always_steam_desktop: {newValue: undefined}});
+  worker.click({menuItemId: 'search_steam', selectionText: 'PEAK'}, {id: 7});
+  assert.equal(worker.updates.length, 0);
+  assert.equal(worker.createdTabs.length, 1);
+  worker.click({menuItemId: 'search_steamdb', selectionText: 'PEAK'}, {id: 7});
+  assert.equal(worker.createdTabs.length, 1);
+});
+
+test('settings changes during a menu rebuild are serialized with the latest state', () => {
+  const worker = loadExtension({}, true, true);
+  worker.changed({b_steamdb: {newValue: false}});
+  worker.changed({b_always_steam_desktop: {newValue: true}});
+  worker.flushRemoval();
+  worker.flushRemoval();
+  assert.equal(worker.menus.some(menu => menu.id === 'search_steamdb'), false);
+  assert.equal(worker.menus.find(menu => menu.id === 'always_open_in_steam').checked, true);
+  assert.ok(worker.menus.find(menu => menu.id === 'search_steam').title.endsWith('(Desktop app)'));
+});
+
+test('manifest uses a packaged service worker and contains no V2 background fields', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.json'), 'utf8'));
+  assert.equal(manifest.manifest_version, 3);
+  assert.equal(manifest.background.service_worker, 'steamContextMenu.js');
+  assert.equal(manifest.background.scripts, undefined);
+  assert.equal(manifest.options_ui.chrome_style, undefined);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', manifest.background.service_worker)));
+});
 
 test('Steam link and page menus use separate destination filters', () => {
   const extension = loadExtension();
