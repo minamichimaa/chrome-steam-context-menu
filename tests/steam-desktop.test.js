@@ -4,7 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 
-function loadExtension(savedOptions, install = true, deferRemovals = false) {
+function loadExtension(savedOptions, install = true, deferRemovals = false, browser = 'chrome') {
   const menus = [];
   const updates = [];
   const createdTabs = [];
@@ -56,9 +56,17 @@ function loadExtension(savedOptions, install = true, deferRemovals = false) {
       create(properties) { createdTabs.push(properties); }
     }
   };
-  const context = vm.createContext({chrome, URL, importScripts(file) {
-    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+  const context = vm.createContext({chrome, URL, importScripts(...files) {
+    for (const file of files) {
+      vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+    }
   }});
+  if (browser === 'firefox') {
+    delete context.importScripts;
+    for (const file of ['settings.js', 'steamUrl.js']) {
+      vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+    }
+  }
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'steamContextMenu.js'), 'utf8'), context);
   if (install) onInstalled();
   return {menus, updates, createdTabs, stored,
@@ -89,6 +97,20 @@ test('a waking worker handles clicks using saved settings without recreating men
   assert.equal(worker.menus.length, 0);
   worker.startup();
   assert.ok(worker.menus.length > 0);
+});
+
+test('Firefox event pages initialize and wake using the shared settings and actions', () => {
+  const installed = loadExtension({}, true, false, 'firefox');
+  installed.menus.find(menu => menu.id === 'always_open_in_steam').onclick({checked: true});
+  const restarted = loadExtension(installed.stored, false, false, 'firefox');
+  restarted.click({menuItemId: 'search_steam', selectionText: 'PEAK'}, {id: 7});
+  assert.equal(restarted.updates[0].url, 'steam://openurl/https://store.steampowered.com/search/?term=PEAK');
+  restarted.click({menuItemId: 'open_steam_page', pageUrl: 'https://steamcommunity.com/app/730/'}, {id: 7});
+  assert.equal(restarted.updates[1].url, 'steam://openurl/https://steamcommunity.com/app/730/');
+  restarted.click({menuItemId: 'search_isthereanydeal', selectionText: 'A&B'});
+  assert.equal(restarted.createdTabs[0].url, 'https://isthereanydeal.com/search/?q=A%26B');
+  restarted.startup();
+  assert.equal(restarted.menus.find(menu => menu.id === 'always_open_in_steam').checked, true);
 });
 
 test('removed settings restore defaults and disabled actions are ignored', () => {
@@ -197,7 +219,7 @@ test('existing IsThereAnyDeal search still preserves selected text', () => {
   assert.equal(url.searchParams.get('q'), '龍が如く & PEAK #1');
 });
 
-test('options restore the default and save the desktop checkbox', () => {
+test('options save only the changed preference and synchronize external changes', () => {
   const elements = {};
   for (const id of ['b_steam', 'b_steam_desktop', 'b_always_steam_desktop', 'b_steamdb', 'b_steamdb_instant',
     'b_isthereanydeal', 'b_options', 'version']) elements[id] = {addEventListener() {}};
@@ -217,17 +239,42 @@ test('options restore the default and save the desktop checkbox', () => {
       addEventListener() {}
     }
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'options.js'), 'utf8'), context);
+  for (const file of ['settings.js', 'options.js']) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+  }
   context.restore_options();
   assert.equal(elements.b_steam_desktop.checked, true);
   assert.equal(elements.b_always_steam_desktop.checked, false);
   elements.b_steam_desktop.checked = false;
   elements.b_always_steam_desktop.checked = true;
-  context.save_options();
+  context.save_options({target: {id: 'b_steam_desktop', checked: false}});
   assert.equal(saved.b_steam_desktop, false);
+  assert.deepEqual(Object.keys(saved), ['b_steam_desktop']);
+  context.save_options({target: {id: 'b_always_steam_desktop', checked: true}});
   assert.equal(saved.b_always_steam_desktop, true);
+  assert.deepEqual(Object.keys(saved), ['b_always_steam_desktop']);
   optionsChanged({b_always_steam_desktop: {newValue: false}}, 'sync');
   assert.equal(elements.b_always_steam_desktop.checked, false);
+  optionsChanged({b_steamdb: {newValue: false}}, 'local');
+  assert.equal(elements.b_steamdb.checked, true);
+  optionsChanged({b_steamdb: {newValue: false}}, 'sync');
+  assert.equal(elements.b_steamdb.checked, false);
+  optionsChanged({b_steamdb: {}}, 'sync');
+  assert.equal(elements.b_steamdb.checked, true);
+  assert.equal(elements.version.textContent, '1.3.0');
+});
+
+test('search-mode and unrelated settings do not rebuild menus', () => {
+  const worker = loadExtension({}, true, true);
+  worker.flushRemoval();
+  const firstMenu = worker.menus[0];
+  worker.changed({b_steamdb_instant: {newValue: true}});
+  worker.changed({unrelated: {newValue: true}});
+  worker.changed({b_steam: {newValue: false}}, 'local');
+  assert.equal(worker.menus[0], firstMenu);
+  assert.throws(() => worker.flushRemoval(), TypeError);
+  worker.click({menuItemId: 'search_steamdb', selectionText: 'PEAK'});
+  assert.equal(worker.createdTabs[0].url, 'https://steamdb.info/instantsearch/?idx=steamdb&q=PEAK');
 });
 
 test('one context-menu checkbox saves the shared setting and changes Steam search', () => {

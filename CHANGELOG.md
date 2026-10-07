@@ -3,13 +3,18 @@
 This file records changes made by minamichimaa to the fork of
 [Skylark95's Steam Context Menu](https://github.com/Skylark95/chrome-steam-context-menu).
 
-## Unreleased
+## 2.0.0
 
 ### 2026-10-07
 - Migrate the Chrome manifest to Manifest V3 with a packaged background service worker.
 - Register menu listeners at worker startup and load saved settings for each click.
 - Rebuild menus on install, browser startup, and relevant settings changes, with stable menu IDs and serialized rebuilding.
 - Remove the deprecated Chrome options styling field and set the minimum Chrome version to 88.
+- Share default settings and Steam URL rules, and consolidate context-menu definitions.
+- Save only the changed checkbox, synchronize all open options-page preferences, and restore defaults when settings are removed.
+- Avoid unnecessary menu rebuilding when only the SteamDB search mode changes.
+- Add a Firefox Manifest V3 build using an event page, a stable add-on ID, and Firefox data-use declarations.
+- Generate Chrome and Firefox builds and versioned release ZIPs from shared sources.
 
 ## 1.4.1
 

@@ -11,18 +11,24 @@ Credit for the original extension goes to Skylark95 and the original contributor
 ### Downloads and compatibility
 Get this fork from [GitHub Releases](https://github.com/minamichimaa/chrome-steam-context-menu/releases), when a release is available, or download the repository's source code.
 
-The `manifest-v3` branch migrates the extension to Manifest V3 for Chrome and compatible Chromium browsers (minimum Chrome 88). The published 1.4.1 release still uses Manifest V2; download this branch's source to test the migration.
+Version 2.0.0 uses Manifest V3 for Chrome and compatible Chromium browsers (minimum Chrome 88). Download the Chrome ZIP from GitHub Releases and extract it before using **Load unpacked**. Version 1.4.1 remains available as the older Manifest V2 release.
 
 For local Chrome testing, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select this repository's folder. Reload the extension and already-open web pages after making changes.
 
-This branch uses Chrome's background service worker. Firefox does not support that background declaration; use the [1.4.1 release](https://github.com/minamichimaa/chrome-steam-context-menu/releases/tag/v1.4.1) for temporary Firefox testing while a separate Firefox background configuration is pending.
+Version 2.0.0 also includes a Firefox Manifest V3 build (Firefox 140 or later). Both builds share the same features and code; Chrome uses a service worker and Firefox uses an event page.
+
+Run `node scripts/build.js` to generate `bin/chrome` and `bin/firefox`. For local Firefox testing, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `bin/firefox/manifest.json`. Temporary add-ons are removed when Firefox closes. Use `bin/chrome` with Chrome's **Load unpacked** option.
+
+To create both versioned release ZIPs, run `./package.ps1` in PowerShell, or `sh package.sh` on a system with Node.js and `zip`. The Firefox ZIP must be signed by Mozilla before normal installation; creating a package does not publish or sign it.
+
+The Firefox build declares the search terms and Steam URLs passed to the chosen services. Searches send only your selected text to Steam, SteamDB, or IsThereAnyDeal; opening in Steam passes the chosen URL to the Steam app. There is no analytics or developer-controlled collection server. The automatic-opening toggle is off by default.
 
 The original author's browser store listings distribute the original extension, not this fork. No browser store listing is currently linked for this fork.
 
 ### Support and contributions
 Please [report bugs or request features in this fork](https://github.com/minamichimaa/chrome-steam-context-menu/issues). Include your browser and version, the selected game title, and what happened. Pull requests are welcome.
 
-With Node.js installed, run `node --test tests/steam-desktop.test.js` to check the context menus, URL handoff, and desktop preference. For a browser check, reload the extension, try a Steam link on another website and an empty area of a Steam page, and click **Open in Steam** to confirm that the intended page opens in the desktop app.
+With Node.js installed, run `node --test` to check both browser builds, context menus, URL handoff, and desktop preference. For a browser check, reload the extension, try a Steam link on another website and an empty area of a Steam page, and click **Open in Steam** to confirm that the intended page opens in the desktop app.
 
 Also test Steam, SteamDB, and IsThereAnyDeal searches, the desktop toggle, and the options page. Close the service worker inspector, leave the extension idle until the worker stops, and repeat a search to verify that it wakes with the saved settings. Automated tests cover worker restarts and menu rebuilding; browser loading and desktop launching still need a live check.
 
