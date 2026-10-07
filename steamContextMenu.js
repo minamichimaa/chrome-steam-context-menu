@@ -103,8 +103,8 @@ function create_steam_desktop_menus() {
   });
   chrome.contextMenus.create({
     "id": "open_steam_page",
-    "title": "Open in Steam",
-    "contexts": ["page"],
+    "title": "Open current page in Steam",
+    "contexts": ["page", "selection", "link", "image", "video", "audio", "editable"],
     "documentUrlPatterns": steam_patterns,
     "onclick": function (info, tab) {
       open_in_steam(info.pageUrl, tab);

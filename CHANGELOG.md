@@ -3,6 +3,11 @@
 This file records changes made by minamichimaa to the fork of
 [Skylark95's Steam Context Menu](https://github.com/Skylark95/chrome-steam-context-menu).
 
+## Unreleased
+
+### 2026-10-03
+- Make **Open current page in Steam** available across page content, including selected text, links, images, media, and editable fields on Steam store/community pages.
+
 ## 1.4.0
 
 ### 2026-09-30

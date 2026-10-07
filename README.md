@@ -27,7 +27,7 @@ When viewing games from retailers other than Steam, select the game title text, 
 
 ### Features
 * Open Steam store and community links in the desktop app by right-clicking a link and choosing **Open in Steam**.
-* Open the current Steam store or community page in the desktop app by right-clicking an empty area and choosing **Open in Steam**.
+* Open the current Steam store or community page in the desktop app by right-clicking anywhere on the page and choosing **Open current page in Steam**, including on selected text, links, images, and other page content.
 * Search selected text on [Steam](http://store.steampowered.com/), [SteamDB](https://steamdb.info/), or [IsThereAnyDeal](https://isthereanydeal.com/).
 * Optionally open clicked Steam store/community links and Steam searches in the desktop app automatically.
 * Choose which search and desktop-opening menus are visible in the extension's options.

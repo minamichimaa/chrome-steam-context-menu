@@ -48,11 +48,11 @@ test('Steam link and page menus use separate destination filters', () => {
   const link = extension.menus.find(menu => menu.id === 'open_steam_link');
   const page = extension.menus.find(menu => menu.id === 'open_steam_page');
   assert.equal(link.contexts.join(','), 'link');
-  assert.equal(page.contexts.join(','), 'page');
+  assert.deepEqual(Array.from(page.contexts), ['page', 'selection', 'link', 'image', 'video', 'audio', 'editable']);
   assert.equal(link.parentId, undefined);
   assert.equal(page.parentId, undefined);
   assert.equal(link.title, 'Open in Steam');
-  assert.equal(page.title, 'Open in Steam');
+  assert.equal(page.title, 'Open current page in Steam');
   assert.equal(extension.menus.some(menu => menu.id === 'open_steam'), false);
   assert.deepEqual(Array.from(link.targetUrlPatterns), [
     '*://store.steampowered.com/*', '*://steamcommunity.com/*', '*://www.steamcommunity.com/*'
@@ -74,6 +74,17 @@ test('link click opens the link, while blank-space click opens the page', () => 
     {id: 8, url: 'steam://openurl/' + pageUrl}
   ]);
   assert.equal(extension.createdTabs.length, 0);
+});
+
+test('current-page action opens the Steam page instead of the clicked link or image', () => {
+  const extension = loadExtension();
+  const page = extension.menus.find(menu => menu.id === 'open_steam_page');
+  const pageUrl = 'https://store.steampowered.com/app/3527290/PEAK/?l=english#reviews';
+  page.onclick({pageUrl, linkUrl: 'https://example.com/',
+    srcUrl: 'https://cdn.example.com/image.png', selectionText: 'PEAK'}, {id: 7});
+  assert.deepEqual(extension.updates, [{id: 7, url: 'steam://openurl/' + pageUrl}]);
+  page.onclick({pageUrl: 'https://example.com/', linkUrl: pageUrl}, {id: 8});
+  assert.equal(extension.updates.length, 1);
 });
 
 test('invalid and unrelated destinations never trigger Steam', () => {
